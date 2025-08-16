@@ -7,8 +7,12 @@ const generateToken = (id) => {
 
 // POST /signup
 export const signup = async (req, res) => {
+  console.log("📩 Incoming body:", req.body); // Debug line
+
   const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ message: 'All fields required' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'All fields required' });
+  }
 
   const userExists = await User.findOne({ email });
   if (userExists) return res.status(400).json({ message: 'Email already in use' });
@@ -21,6 +25,7 @@ export const signup = async (req, res) => {
     user: { id: user._id, name: user.name, email: user.email }
   });
 };
+
 
 // POST /login
 export const login = async (req, res) => {
