@@ -17,4 +17,6 @@ app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }));
 app.use("/api/auth", authRoutes);
 app.use("/api/notes", noteRoutes);
 
+// global error handler
+app.use(errorHandler);
 export default app;
