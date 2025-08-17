@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/user.js';
 import crypto from 'crypto';
+import { sendEmail } from "../utils/sendEmail.js";
 
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: '1h' });
@@ -51,26 +52,32 @@ export const getMe = async (req, res) => {
 };
 
 // ✅ Forgot password
-export const forgotPassword = async (req, res) => {
-  const { email } = req.body;
-  if (!email) return res.status(400).json({ message: "Email is required" });
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
 
-  const user = await User.findOne({ email });
-  if (!user) {
-    // Don't reveal existence — but for dev we can respond OK
-    return res.json({ message: "If that email exists, reset link has been sent" });
+    if (!user) {
+      return res.json({ message: "If that email exists, reset link has been sent" });
+    }
+
+    const resetToken = user.getResetPasswordToken();
+    await user.save({ validateBeforeSave: false });
+
+    const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
+    const message = `You requested a password reset.\n\nClick the link below:\n${resetUrl}\n\nIf you didn't request this, ignore.`;
+
+    await sendEmail({
+      to: user.email,
+      subject: "Password Reset Request",
+      text: message,
+      html: `<p>You requested a password reset.</p><p><a href="${resetUrl}">Reset Password</a></p>`,
+    });
+
+    res.json({ message: "Email sent for password reset" });
+  } catch (err) {
+    next(err); // central error handler
   }
-
-  const resetToken = user.getResetPasswordToken();
-  await user.save({ validateBeforeSave: false });
-
-  // Usually you'd email this URL. For dev, return it in response:
-  const resetUrl = `${req.protocol}://${req.get("host")}/api/auth/reset-password/${resetToken}`;
-
-  return res.json({
-    message: "Password reset link generated",
-    resetUrl, // ⚠️ dev only; remove in production
-  });
 };
 
 // ✅ Reset password using token
