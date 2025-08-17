@@ -15,6 +15,9 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+     // ✅ Reset password fields
+    resetPasswordToken:   String,
+    resetPasswordExpires: Date,
     // role: {
     //     type: String,
     //     enum: ["user", "admin"],
@@ -38,7 +41,17 @@ userSchema.methods.matchPassword = async function (enteredPassword) {
     return await bcrypt.compare(enteredPassword, this.password);
 };
 
+// ✅ Generate and set reset token (returns plain token)
+userSchema.methods.getResetPasswordToken = function () {
+  // plain token
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  // hash stored in DB
+  const hashed = crypto.createHash("sha256").update(resetToken).digest("hex");
 
+  this.resetPasswordToken = hashed;
+  this.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
+  return resetToken; // return plain for sending via email (or response in dev)
+};
 
-
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+export default User;
