@@ -1,4 +1,4 @@
-cimport express  from "express";
+import express from "express";
 import { signup, login, getMe, forgotPassword, resetPassword, changePassword } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
