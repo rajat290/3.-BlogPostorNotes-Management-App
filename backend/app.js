@@ -3,7 +3,8 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import authRoutes from "./src/routes/auth.routes.js";
-import noteRoutes from "./src/routes/note.routes.js"
+import noteRoutes from "./src/routes/note.routes.js";
+import { errorHandler } from "./src/middleware/error.middleware.js";
 
 const app = express();
 
