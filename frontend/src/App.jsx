@@ -4,10 +4,12 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import AddNote from "./pages/AddNote";
 import EditNote from "./pages/EditNote";
+import { ThemeProvider } from "./context/ThemeContext";
 
 
 function App() {
   return (
+    <ThemeProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/signup" element={<Signup />} />
@@ -18,6 +20,7 @@ function App() {
 
       </Routes>
     </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
