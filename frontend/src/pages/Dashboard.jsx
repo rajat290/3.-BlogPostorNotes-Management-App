@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function Dashboard() {
   const { user, setUser, setToken } = useContext(AuthContext);
@@ -116,8 +118,8 @@ export default function Dashboard() {
           </div>
         </nav>
 
-        {/* Input Box */}
-        <div className="max-w-3xl mx-auto mt-6 w-full px-4">
+        {/* Input Box with Quill */}
+        <div className="max-w-4xl mx-auto mt-6 w-full px-4">
           <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-lg">
             <input
               type="text"
@@ -126,11 +128,21 @@ export default function Dashboard() {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full text-xl font-bold bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none p-2 mb-3 dark:text-white"
             />
-            <textarea
-              placeholder="Start writing your note..."
+            <ReactQuill
+              theme="snow"
               value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="w-full h-28 bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg p-3 resize-none focus:outline-none dark:text-white"
+              onChange={setContent}
+              className="bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow"
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, 3, false] }],
+                  ["bold", "italic", "underline", "strike"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  [{ align: [] }],
+                  ["link", "image"],
+                  ["clean"],
+                ],
+              }}
             />
             <div className="flex justify-between items-center mt-3">
               <input
@@ -170,9 +182,10 @@ export default function Dashboard() {
                   <h3 className="font-bold text-gray-800 dark:text-white text-lg">
                     {note.title}
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-3">
-                    {note.content}
-                  </p>
+                  <div
+                    className="text-gray-600 dark:text-gray-300 mt-2 line-clamp-3"
+                    dangerouslySetInnerHTML={{ __html: note.content }}
+                  />
                   {note.tag && (
                     <span className="mt-3 inline-block px-2 py-1 text-sm bg-indigo-100 dark:bg-indigo-700 text-indigo-600 dark:text-indigo-200 rounded">
                       #{note.tag}

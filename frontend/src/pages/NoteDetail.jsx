@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import ConfirmModal from "../components/ConfirmModal";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
 
 export default function NoteDetail() {
   const { id } = useParams();
@@ -172,16 +174,26 @@ export default function NoteDetail() {
 
           {/* Content */}
           {!edit ? (
-            <p className="mt-6 text-gray-800 dark:text-gray-200 leading-relaxed whitespace-pre-wrap">
-              {note.content}
-            </p>
+            <div
+              className="mt-6 prose dark:prose-invert max-w-none leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: note.content }}
+            />
           ) : (
-            <textarea
-              name="content"
-              rows={12}
+            <ReactQuill
               value={form.content}
-              onChange={handleChange}
-              className="mt-6 w-full rounded-xl border dark:border-gray-600 dark:bg-gray-700 dark:text-white p-3 focus:outline-none"
+              onChange={(val) => setForm({ ...form, content: val })}
+              className="mt-6 bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow"
+              theme="snow"
+              modules={{
+                toolbar: [
+                  [{ header: [1, 2, 3, false] }],
+                  ["bold", "italic", "underline", "strike"],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  [{ align: [] }],
+                  ["link", "image"],
+                  ["clean"],
+                ],
+              }}
             />
           )}
         </div>
