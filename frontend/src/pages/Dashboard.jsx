@@ -75,6 +75,7 @@ export default function Dashboard() {
           {notes.map((note) => (
             <li
               key={note._id}
+              onClick={() => navigate(`/note/${note._id}`)}
               className="cursor-pointer p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-800 dark:text-gray-200"
             >
               {note.title || "Untitled"}
@@ -163,6 +164,7 @@ export default function Dashboard() {
               {notes.map((note) => (
                 <div
                   key={note._id}
+                  onClick={() => navigate(`/note/${note._id}`)}
                   className="bg-white dark:bg-gray-800 shadow-lg rounded-2xl p-5 hover:shadow-xl transition"
                 >
                   <h3 className="font-bold text-gray-800 dark:text-white text-lg">
