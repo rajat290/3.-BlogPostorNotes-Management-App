@@ -51,7 +51,9 @@ export default function Dashboard() {
         {loading ? (
           <p className="text-center text-gray-500">Loading notes...</p>
         ) : notes.length === 0 ? (
-          <p className="text-center text-gray-600">No notes yet. Create your first one!</p>
+          <p className="text-center text-gray-600">
+            No notes yet. Create your first one!
+          </p>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {notes.map((note) => (
@@ -59,10 +61,33 @@ export default function Dashboard() {
                 key={note._id}
                 className="bg-white shadow-lg rounded-2xl p-5 hover:shadow-xl transition cursor-pointer"
               >
-                <h2 className="text-lg font-bold text-gray-800">{note.title}</h2>
+                <h2 className="text-lg font-bold text-gray-800">
+                  {note.title}
+                </h2>
                 <p className="text-gray-600 mt-2 line-clamp-3">
                   {note.content}
                 </p>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => navigate(`/edit-note/${note._id}`)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded-lg hover:bg-blue-600 text-sm"
+                  >
+                    Edit
+                  </button>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await api.delete(`/notes/${note._id}`);
+                        setNotes(notes.filter((n) => n._id !== note._id)); // remove from UI
+                      } catch (err) {
+                        console.error("Delete failed:", err);
+                      }
+                    }}
+                    className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 text-sm"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             ))}
           </div>
