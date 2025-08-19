@@ -42,17 +42,22 @@ export default function Dashboard() {
   };
 
   const handleAddNote = async () => {
-    if (!title && !content) return;
-    try {
-      const res = await api.post("/notes", { title, content, tag });
-      setNotes([res.data.note, ...notes]); // new note on top
-      setTitle("");
-      setContent("");
-      setTag("");
-    } catch (err) {
-      console.error(err);
-    }
-  };
+  if (!title && !content) return;
+  try {
+    const res = await api.post("/notes", { title, content, tag });
+
+    const newNote = res.data.note || res.data; // ✅ dono case handle
+    if (!newNote) throw new Error("Invalid response from server");
+
+    setNotes([newNote, ...notes]); // ✅ crash proof
+    setTitle("");
+    setContent("");
+    setTag("");
+  } catch (err) {
+    console.error("Error adding note:", err);
+  }
+};
+
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 transition">
