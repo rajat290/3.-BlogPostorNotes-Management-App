@@ -1,4 +1,4 @@
-import { useEffect, useState, useContext } from "react";
+import { useEffect, useState, useContext, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
@@ -7,7 +7,47 @@ import { ThemeContext } from "../context/ThemeContext";
 // Tiptap imports
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Bold, Italic, List, ListOrdered } from "lucide-react";
+import Underline from "@tiptap/extension-underline";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
+import Placeholder from "@tiptap/extension-placeholder";
+import Highlight from "@tiptap/extension-highlight";
+import TaskList from "@tiptap/extension-task-list";
+import TaskItem from "@tiptap/extension-task-item";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Color from "@tiptap/extension-color";
+import Typography from "@tiptap/extension-typography";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+
+// Icons
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Strikethrough,
+  Highlighter,
+  Code,
+  Code2,
+  Quote,
+  List as BulletList,
+  ListOrdered,
+  CheckSquare,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  Redo2,
+  Undo2,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
+  Heading1,
+  Heading2,
+  Heading3,
+  X,
+  Palette,
+} from "lucide-react";
 
 export default function Dashboard() {
   const { user, setUser, setToken } = useContext(AuthContext);
@@ -43,10 +83,46 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  // ✅ Tiptap Editor
+  // ✅ Full-featured Tiptap Editor
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      StarterKit.configure({
+        bulletList: { keepMarks: true },
+        orderedList: { keepMarks: true },
+        codeBlock: true,
+      }),
+      Underline,
+      Link.configure({
+        autolink: true,
+        openOnClick: true,
+        linkOnPaste: true,
+        HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
+      }),
+      Image.configure({
+        allowBase64: true,
+      }),
+      Placeholder.configure({
+        placeholder: "Write your note… Use / for commands (bold, list, image, etc.)",
+      }),
+      Highlight,
+      TaskList,
+      TaskItem.configure({ nested: true }),
+      TextStyle,
+      Color,
+      Typography,
+      Subscript,
+      Superscript,
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+    ],
     content: "",
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[280px] prose dark:prose-invert max-w-none focus:outline-none p-4 rounded-xl bg-white dark:bg-gray-700 dark:text-white",
+      },
+    },
   });
 
   const handleAddNote = async () => {
@@ -69,6 +145,213 @@ export default function Dashboard() {
       console.error("Error adding note:", err);
     }
   };
+
+  // Toolbar component
+  const Toolbar = useMemo(() => {
+    if (!editor) return null;
+
+    const isActive = (attr, opts) => editor.isActive(attr, opts);
+
+    const onSetLink = () => {
+      const prev = editor.getAttributes("link")?.href || "";
+      const url = window.prompt("Paste URL", prev);
+      if (url === null) return;
+      if (url === "") {
+        editor.chain().focus().unsetLink().run();
+        return;
+      }
+      editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+    };
+
+    const onUnsetLink = () => editor.chain().focus().unsetLink().run();
+
+    const addImage = () => {
+      const url = window.prompt("Image URL");
+      if (!url) return;
+      editor.chain().focus().setImage({ src: url, alt: "" }).run();
+    };
+
+    return (
+      <div className="flex flex-wrap gap-2 p-2 border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 rounded-t-xl">
+        {/* Undo/Redo */}
+        <IconBtn title="Undo" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
+          <Undo2 className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn title="Redo" onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
+          <Redo2 className="w-4 h-4" />
+        </IconBtn>
+
+        <Divider />
+
+        {/* Headings */}
+        <IconBtn
+          title="Heading 1"
+          active={isActive("heading", { level: 1 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+        >
+          <Heading1 className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Heading 2"
+          active={isActive("heading", { level: 2 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        >
+          <Heading2 className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Heading 3"
+          active={isActive("heading", { level: 3 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        >
+          <Heading3 className="w-4 h-4" />
+        </IconBtn>
+
+        <Divider />
+
+        {/* Marks */}
+        <IconBtn
+          title="Bold"
+          active={isActive("bold")}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          disabled={!editor.can().chain().focus().toggleBold().run()}
+        >
+          <Bold className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Italic"
+          active={isActive("italic")}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          disabled={!editor.can().chain().focus().toggleItalic().run()}
+        >
+          <Italic className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Underline"
+          active={isActive("underline")}
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+        >
+          <UnderlineIcon className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Strike"
+          active={isActive("strike")}
+          onClick={() => editor.chain().focus().toggleStrike().run()}
+        >
+          <Strikethrough className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Highlight"
+          active={isActive("highlight")}
+          onClick={() => editor.chain().focus().toggleHighlight().run()}
+        >
+          <Highlighter className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn title="Code" active={isActive("code")} onClick={() => editor.chain().focus().toggleCode().run()}>
+          <Code className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Code Block"
+          active={isActive("codeBlock")}
+          onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+        >
+          <Code2 className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Blockquote"
+          active={isActive("blockquote")}
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+        >
+          <Quote className="w-4 h-4" />
+        </IconBtn>
+
+        <Divider />
+
+        {/* Lists */}
+        <IconBtn
+          title="Bullet List"
+          active={isActive("bulletList")}
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+        >
+          <BulletList className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Ordered List"
+          active={isActive("orderedList")}
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        >
+          <ListOrdered className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Task List"
+          active={isActive("taskList")}
+          onClick={() => editor.chain().focus().toggleTaskList().run()}
+        >
+          <CheckSquare className="w-4 h-4" />
+        </IconBtn>
+
+        <Divider />
+
+        {/* Alignment */}
+        <IconBtn title="Align Left" active={isActive({ textAlign: "left" })} onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+          <AlignLeft className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Align Center"
+          active={isActive({ textAlign: "center" })}
+          onClick={() => editor.chain().focus().setTextAlign("center").run()}
+        >
+          <AlignCenter className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Align Right"
+          active={isActive({ textAlign: "right" })}
+          onClick={() => editor.chain().focus().setTextAlign("right").run()}
+        >
+          <AlignRight className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn
+          title="Justify"
+          active={isActive({ textAlign: "justify" })}
+          onClick={() => editor.chain().focus().setTextAlign("justify").run()}
+        >
+          <AlignJustify className="w-4 h-4" />
+        </IconBtn>
+
+        <Divider />
+
+        {/* Link & Image */}
+        <IconBtn title="Set Link" active={isActive("link")} onClick={onSetLink}>
+          <LinkIcon className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn title="Remove Link" onClick={onUnsetLink}>
+          <X className="w-4 h-4" />
+        </IconBtn>
+        <IconBtn title="Insert Image" onClick={addImage}>
+          <ImageIcon className="w-4 h-4" />
+        </IconBtn>
+
+        <Divider />
+
+        {/* Color */}
+        <div className="flex items-center gap-2 pl-1 pr-2 rounded bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600">
+          <Palette className="w-4 h-4 text-gray-600 dark:text-gray-300" />
+          <input
+            type="color"
+            title="Text Color"
+            onChange={(e) => editor.chain().focus().setColor(e.target.value).run()}
+            className="h-7 w-8 cursor-pointer bg-transparent border-0 outline-none"
+          />
+          <button
+            type="button"
+            onClick={() => editor.chain().focus().unsetColor().run()}
+            className="text-xs px-2 py-1 rounded bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200"
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+    );
+  }, [editor]);
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 transition">
@@ -134,7 +417,7 @@ export default function Dashboard() {
           </div>
         </nav>
 
-        {/* Input Box with Tiptap */}
+        {/* Input Box with Full-featured Editor */}
         <div className="max-w-4xl mx-auto mt-6 w-full px-4">
           <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-lg">
             <input
@@ -145,58 +428,13 @@ export default function Dashboard() {
               className="w-full text-xl font-bold bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none p-2 mb-3 dark:text-white"
             />
 
-            {/* Toolbar */}
-            {editor && (
-              <div className="flex gap-2 p-2 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-xl mb-2">
-                <button
-                  onClick={() => editor.chain().focus().toggleBold().run()}
-                  className={`p-2 rounded ${
-                    editor.isActive("bold")
-                      ? "bg-indigo-200 dark:bg-indigo-700"
-                      : ""
-                  }`}
-                >
-                  <Bold size={16} />
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleItalic().run()}
-                  className={`p-2 rounded ${
-                    editor.isActive("italic")
-                      ? "bg-indigo-200 dark:bg-indigo-700"
-                      : ""
-                  }`}
-                >
-                  <Italic size={16} />
-                </button>
-                <button
-                  onClick={() => editor.chain().focus().toggleBulletList().run()}
-                  className={`p-2 rounded ${
-                    editor.isActive("bulletList")
-                      ? "bg-indigo-200 dark:bg-indigo-700"
-                      : ""
-                  }`}
-                >
-                  <List size={16} />
-                </button>
-                <button
-                  onClick={() =>
-                    editor.chain().focus().toggleOrderedList().run()
-                  }
-                  className={`p-2 rounded ${
-                    editor.isActive("orderedList")
-                      ? "bg-indigo-200 dark:bg-indigo-700"
-                      : ""
-                  }`}
-                >
-                  <ListOrdered size={16} />
-                </button>
-              </div>
-            )}
+            {/* Full Toolbar */}
+            {editor && Toolbar}
 
             {/* Editor */}
             <EditorContent
               editor={editor}
-              className="bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow min-h-[150px] p-3 prose dark:prose-invert max-w-none"
+              className="bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow min-h-[280px] p-4 prose dark:prose-invert max-w-none"
             />
 
             <div className="flex justify-between items-center mt-3">
@@ -254,4 +492,30 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+/* —————— Small UI helpers —————— */
+function IconBtn({ title, onClick, children, active, disabled }) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      disabled={disabled}
+      className={[
+        "h-8 px-2 rounded-md border text-sm inline-flex items-center justify-center gap-1",
+        "border-gray-200 dark:border-gray-600",
+        active
+          ? "bg-indigo-600 text-white"
+          : "bg-white text-gray-800 dark:bg-gray-700 dark:text-gray-100",
+        disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-100 dark:hover:bg-gray-600",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <div className="w-px h-8 bg-gray-200 dark:bg-gray-600 mx-1" />;
 }
