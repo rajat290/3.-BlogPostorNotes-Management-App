@@ -1,38 +1,33 @@
 import React, { useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Bold, Italic, List, ListOrdered } from "lucide-react";
 
 const NoteEditor = ({ onSave }) => {
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [tags, setTags] = useState("");
 
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: "",
+  });
+
   const handleSave = () => {
-    if (!title || !content) {
+    if (!title || !editor.getHTML()) {
       return alert("Please add both title and content!");
     }
 
-    // tags ko array me convert kar dena
     const tagList = tags.split(",").map((tag) => tag.trim());
 
-    onSave({ title, content, tags: tagList });
+    onSave({
+      title,
+      content: editor.getHTML(),
+      tags: tagList,
+    });
 
-    // reset form
     setTitle("");
-    setContent("");
     setTags("");
-  };
-
-  // Quill toolbar config
-  const modules = {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ["bold", "italic", "underline", "strike"],
-      [{ align: [] }],
-      [{ list: "ordered" }, { list: "bullet" }],
-      ["link", "image", "code-block"],
-      ["clean"],
-    ],
+    editor.commands.setContent("");
   };
 
   return (
@@ -46,13 +41,48 @@ const NoteEditor = ({ onSave }) => {
         className="w-full p-2 mb-3 rounded-lg text-black"
       />
 
+      {/* Toolbar */}
+      {editor && (
+        <div className="flex gap-2 p-2 border-b border-gray-700 bg-gray-800 rounded-t-xl mb-2">
+          <button
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            className={`p-2 rounded ${
+              editor.isActive("bold") ? "bg-indigo-700" : ""
+            }`}
+          >
+            <Bold size={16} />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            className={`p-2 rounded ${
+              editor.isActive("italic") ? "bg-indigo-700" : ""
+            }`}
+          >
+            <Italic size={16} />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            className={`p-2 rounded ${
+              editor.isActive("bulletList") ? "bg-indigo-700" : ""
+            }`}
+          >
+            <List size={16} />
+          </button>
+          <button
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            className={`p-2 rounded ${
+              editor.isActive("orderedList") ? "bg-indigo-700" : ""
+            }`}
+          >
+            <ListOrdered size={16} />
+          </button>
+        </div>
+      )}
+
       {/* Editor */}
-      <ReactQuill
-        theme="snow"
-        value={content}
-        onChange={setContent}
-        modules={modules}
-        className="bg-white text-black rounded-lg mb-3"
+      <EditorContent
+        editor={editor}
+        className="bg-white text-black min-h-[150px] p-3 rounded-lg mb-3 prose max-w-none"
       />
 
       {/* Tags */}
