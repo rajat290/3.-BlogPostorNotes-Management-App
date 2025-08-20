@@ -3,8 +3,11 @@ import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 import { AuthContext } from "../context/AuthContext";
 import { ThemeContext } from "../context/ThemeContext";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+
+// Tiptap imports
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import { Bold, Italic, List, ListOrdered } from "lucide-react";
 
 export default function Dashboard() {
   const { user, setUser, setToken } = useContext(AuthContext);
@@ -15,7 +18,6 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
   const [tag, setTag] = useState("");
 
   const navigate = useNavigate();
@@ -41,23 +43,32 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+  // ✅ Tiptap Editor
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: "",
+  });
+
   const handleAddNote = async () => {
-  if (!title && !content) return;
-  try {
-    const res = await api.post("/notes", { title, content, tag });
+    if (!title && !editor.getHTML()) return;
+    try {
+      const res = await api.post("/notes", {
+        title,
+        content: editor.getHTML(),
+        tag,
+      });
 
-    const newNote = res.data.note || res.data; // ✅ dono case handle
-    if (!newNote) throw new Error("Invalid response from server");
+      const newNote = res.data.note || res.data;
+      if (!newNote) throw new Error("Invalid response from server");
 
-    setNotes([newNote, ...notes]); // ✅ crash proof
-    setTitle("");
-    setContent("");
-    setTag("");
-  } catch (err) {
-    console.error("Error adding note:", err);
-  }
-};
-
+      setNotes([newNote, ...notes]);
+      setTitle("");
+      setTag("");
+      editor.commands.setContent("");
+    } catch (err) {
+      console.error("Error adding note:", err);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100 dark:bg-gray-900 transition">
@@ -123,7 +134,7 @@ export default function Dashboard() {
           </div>
         </nav>
 
-        {/* Input Box with Quill */}
+        {/* Input Box with Tiptap */}
         <div className="max-w-4xl mx-auto mt-6 w-full px-4">
           <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-lg">
             <input
@@ -133,22 +144,61 @@ export default function Dashboard() {
               onChange={(e) => setTitle(e.target.value)}
               className="w-full text-xl font-bold bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none p-2 mb-3 dark:text-white"
             />
-            <ReactQuill
-              theme="snow"
-              value={content}
-              onChange={setContent}
-              className="bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow"
-              modules={{
-                toolbar: [
-                  [{ header: [1, 2, 3, false] }],
-                  ["bold", "italic", "underline", "strike"],
-                  [{ list: "ordered" }, { list: "bullet" }],
-                  [{ align: [] }],
-                  ["link", "image"],
-                  ["clean"],
-                ],
-              }}
+
+            {/* Toolbar */}
+            {editor && (
+              <div className="flex gap-2 p-2 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-900 rounded-t-xl mb-2">
+                <button
+                  onClick={() => editor.chain().focus().toggleBold().run()}
+                  className={`p-2 rounded ${
+                    editor.isActive("bold")
+                      ? "bg-indigo-200 dark:bg-indigo-700"
+                      : ""
+                  }`}
+                >
+                  <Bold size={16} />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleItalic().run()}
+                  className={`p-2 rounded ${
+                    editor.isActive("italic")
+                      ? "bg-indigo-200 dark:bg-indigo-700"
+                      : ""
+                  }`}
+                >
+                  <Italic size={16} />
+                </button>
+                <button
+                  onClick={() => editor.chain().focus().toggleBulletList().run()}
+                  className={`p-2 rounded ${
+                    editor.isActive("bulletList")
+                      ? "bg-indigo-200 dark:bg-indigo-700"
+                      : ""
+                  }`}
+                >
+                  <List size={16} />
+                </button>
+                <button
+                  onClick={() =>
+                    editor.chain().focus().toggleOrderedList().run()
+                  }
+                  className={`p-2 rounded ${
+                    editor.isActive("orderedList")
+                      ? "bg-indigo-200 dark:bg-indigo-700"
+                      : ""
+                  }`}
+                >
+                  <ListOrdered size={16} />
+                </button>
+              </div>
+            )}
+
+            {/* Editor */}
+            <EditorContent
+              editor={editor}
+              className="bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow min-h-[150px] p-3 prose dark:prose-invert max-w-none"
             />
+
             <div className="flex justify-between items-center mt-3">
               <input
                 type="text"
