@@ -2,8 +2,12 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/axios";
 import ConfirmModal from "../components/ConfirmModal";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
+
+// TipTap
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+// Icons
+import { Bold, Italic, List, ListOrdered, Heading1, Heading2 } from "lucide-react";
 
 export default function NoteDetail() {
   const { id } = useParams();
@@ -11,46 +15,85 @@ export default function NoteDetail() {
 
   const [note, setNote] = useState(null);
   const [edit, setEdit] = useState(false);
-  const [form, setForm] = useState({ title: "", content: "", category: "", tags: [] });
+  const [form, setForm] = useState({
+    title: "",
+    content: "",
+    category: "",
+    tags: [],
+  });
   const [saving, setSaving] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [toast, setToast] = useState("");
+
+  // TipTap editor (content is set after fetch)
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: "",
+    editorProps: {
+      attributes: {
+        class:
+          "min-h-[220px] p-3 focus:outline-none prose dark:prose-invert max-w-none",
+      },
+    },
+  });
 
   const fetchNote = async () => {
     try {
       const res = await api.get(`/notes/${id}`);
       const n = res.data;
       setNote(n);
+      const tagsArray = Array.isArray(n.tags)
+        ? n.tags
+        : n.tags
+        ? [n.tags]
+        : [];
       setForm({
         title: n.title || "",
         content: n.content || "",
         category: n.category || "General",
-        tags: Array.isArray(n.tags) ? n.tags : (n.tags ? [n.tags] : []),
+        tags: tagsArray,
       });
+      // set editor content
+      if (editor) editor.commands.setContent(n.content || "");
     } catch (e) {
       navigate("/dashboard");
     }
   };
 
-  useEffect(() => { fetchNote(); }, [id]);
+  useEffect(() => {
+    fetchNote();
+    // re-run setContent after editor mounts
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, editor]);
 
-  const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleChange = (e) =>
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
 
   const handleTagAdd = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
       const val = e.currentTarget.value.trim();
-      if (val && !form.tags.includes(val)) setForm({ ...form, tags: [...form.tags, val] });
+      if (val && !form.tags.includes(val)) {
+        setForm((prev) => ({ ...prev, tags: [...prev.tags, val] }));
+      }
       e.currentTarget.value = "";
     }
   };
 
-  const removeTag = (t) => setForm({ ...form, tags: form.tags.filter(x => x !== t) });
+  const removeTag = (t) =>
+    setForm((prev) => ({ ...prev, tags: prev.tags.filter((x) => x !== t) }));
 
   const saveNote = async () => {
+    if (!editor) return;
     setSaving(true);
     try {
-      await api.put(`/notes/${id}`, form);
+      const payload = {
+        title: form.title,
+        content: editor.getHTML(), // take TipTap HTML
+        category: form.category,
+        tags: form.tags,
+      };
+      await api.put(`/notes/${id}`, payload);
       setToast("Saved ✓");
       setEdit(false);
       await fetchNote();
@@ -111,7 +154,21 @@ export default function NoteDetail() {
             ) : (
               <>
                 <button
-                  onClick={() => setEdit(false)}
+                  onClick={() => {
+                    setEdit(false);
+                    // revert unsaved changes
+                    setForm((prev) => ({
+                      ...prev,
+                      title: note.title || "",
+                      category: note.category || "General",
+                      tags: Array.isArray(note.tags)
+                        ? note.tags
+                        : note.tags
+                        ? [note.tags]
+                        : [],
+                    }));
+                    if (editor) editor.commands.setContent(note.content || "");
+                  }}
                   className="px-4 py-2 rounded-lg border dark:border-gray-700"
                 >
                   Cancel
@@ -140,13 +197,15 @@ export default function NoteDetail() {
               name="title"
               value={form.title}
               onChange={handleChange}
+              placeholder="Title..."
               className="w-full text-2xl font-bold bg-transparent border-b border-gray-300 dark:border-gray-600 focus:outline-none p-1 mb-2 dark:text-white"
             />
           )}
 
           {/* Meta */}
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-            {new Date(note.updatedAt || note.createdAt).toLocaleString()} • {form.category || "General"}
+            {new Date(note.updatedAt || note.createdAt).toLocaleString()} •{" "}
+            {form.category || "General"}
           </p>
 
           {/* Tags */}
@@ -158,7 +217,12 @@ export default function NoteDetail() {
               >
                 #{t}
                 {edit && (
-                  <button onClick={() => removeTag(t)} className="text-indigo-700 dark:text-indigo-200">×</button>
+                  <button
+                    onClick={() => removeTag(t)}
+                    className="text-indigo-700 dark:text-indigo-200"
+                  >
+                    ×
+                  </button>
                 )}
               </span>
             ))}
@@ -179,22 +243,92 @@ export default function NoteDetail() {
               dangerouslySetInnerHTML={{ __html: note.content }}
             />
           ) : (
-            <ReactQuill
-              value={form.content}
-              onChange={(val) => setForm({ ...form, content: val })}
-              className="mt-6 bg-white dark:bg-gray-700 dark:text-white rounded-xl shadow"
-              theme="snow"
-              modules={{
-                toolbar: [
-                  [{ header: [1, 2, 3, false] }],
-                  ["bold", "italic", "underline", "strike"],
-                  [{ list: "ordered" }, { list: "bullet" }],
-                  [{ align: [] }],
-                  ["link", "image"],
-                  ["clean"],
-                ],
-              }}
-            />
+            <>
+              {/* Toolbar */}
+              {editor && (
+                <div className="flex flex-wrap gap-2 p-2 border rounded-t-xl dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+                  <button
+                    onClick={() =>
+                      editor.chain().focus().toggleHeading({ level: 1 }).run()
+                    }
+                    className={`p-2 rounded ${
+                      editor.isActive("heading", { level: 1 })
+                        ? "bg-indigo-200 dark:bg-indigo-700"
+                        : ""
+                    }`}
+                    title="Heading 1"
+                  >
+                    <Heading1 size={16} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      editor.chain().focus().toggleHeading({ level: 2 }).run()
+                    }
+                    className={`p-2 rounded ${
+                      editor.isActive("heading", { level: 2 })
+                        ? "bg-indigo-200 dark:bg-indigo-700"
+                        : ""
+                    }`}
+                    title="Heading 2"
+                  >
+                    <Heading2 size={16} />
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().toggleBold().run()}
+                    className={`p-2 rounded ${
+                      editor.isActive("bold")
+                        ? "bg-indigo-200 dark:bg-indigo-700"
+                        : ""
+                    }`}
+                    title="Bold"
+                  >
+                    <Bold size={16} />
+                  </button>
+                  <button
+                    onClick={() => editor.chain().focus().toggleItalic().run()}
+                    className={`p-2 rounded ${
+                      editor.isActive("italic")
+                        ? "bg-indigo-200 dark:bg-indigo-700"
+                        : ""
+                    }`}
+                    title="Italic"
+                  >
+                    <Italic size={16} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      editor.chain().focus().toggleBulletList().run()
+                    }
+                    className={`p-2 rounded ${
+                      editor.isActive("bulletList")
+                        ? "bg-indigo-200 dark:bg-indigo-700"
+                        : ""
+                    }`}
+                    title="Bullet list"
+                  >
+                    <List size={16} />
+                  </button>
+                  <button
+                    onClick={() =>
+                      editor.chain().focus().toggleOrderedList().run()
+                    }
+                    className={`p-2 rounded ${
+                      editor.isActive("orderedList")
+                        ? "bg-indigo-200 dark:bg-indigo-700"
+                        : ""
+                    }`}
+                    title="Numbered list"
+                  >
+                    <ListOrdered size={16} />
+                  </button>
+                </div>
+              )}
+
+              {/* Editor */}
+              <div className="rounded-b-xl bg-white dark:bg-gray-700 dark:text-white shadow">
+                <EditorContent editor={editor} />
+              </div>
+            </>
           )}
         </div>
 
