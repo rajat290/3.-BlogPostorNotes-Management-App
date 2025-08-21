@@ -1,4 +1,4 @@
-# Blog App Folder Structure
+# Notes Management App Folder Structure
 
 ## Root Directory
 ```
@@ -6,176 +6,104 @@ BlogPostorNotes Management App/
 ├── backend/
 │   ├── src/
 │   │   ├── config/
-│   │   │   ├── db.js
-│   │   │   └── config.js
+│   │   │   └── db.js
 │   │   ├── controllers/
 │   │   │   ├── auth.controller.js
-│   │   │   ├── blog.controller.js
-│   │   │   ├── user.controller.js
-│   │   │   └── comment.controller.js
+│   │   │   ├── note.controller.js
+│   │   │   └── validate.middleware.js
 │   │   ├── middleware/
 │   │   │   ├── auth.middleware.js
-│   │   │   ├── error.middleware.js
-│   │   │   └── validation.middleware.js
+│   │   │   └── error.middleware.js
 │   │   ├── models/
-│   │   │   ├── user.js
-│   │   │   ├── blog.js
-│   │   │   ├── comment.js
-│   │   │   └── category.js
+│   │   │   ├── note.js
+│   │   │   └── user.js
 │   │   ├── routes/
-│   │   │   ├── auth.js
-│   │   │   ├── blogs.js
-│   │   │   ├── users.js
-│   │   │   └── comments.js
-│   │   ├── services/
-│   │   │   ├── auth.service.js
-│   │   │   ├── blog.service.js
-│   │   │   └── email.service.js
+│   │   │   ├── auth.routes.js
+│   │   │   └── note.routes.js
 │   │   ├── utils/
-│   │   │   ├── validators.js
-│   │   │   ├── helpers.js
-│   │   │   └── constants.js
+│   │   │   └── sendEmail.js
 │   │   └── app.js
-│   ├── uploads/
-│   │   ├── images/
-│   │   └── documents/
-│   ├── .env.example
 │   ├── .gitignore
-│   ├── package.json
+│   ├── app.js
 │   ├── package-lock.json
+│   ├── package.json
 │   └── server.js
 │
 ├── frontend/
-│   ├── BlogApp/
-│   │   ├── public/
-│   │   │   ├── index.html
-│   │   │   ├── favicon.ico
-│   │   │   └── manifest.json
-│   │   ├── src/
-│   │   │   ├── components/
-│   │   │   │   ├── common/
-│   │   │   │   │   ├── Header.jsx
-│   │   │   │   │   ├── Footer.jsx
-│   │   │   │   │   ├── Sidebar.jsx
-│   │   │   │   │   └── Layout.jsx
-│   │   │   │   ├── auth/
-│   │   │   │   │   ├── Login.jsx
-│   │   │   │   │   ├── Register.jsx
-│   │   │   │   │   └── Profile.jsx
-│   │   │   │   ├── blog/
-│   │   │   │   │   ├── BlogList.jsx
-│   │   │   │   │   ├── BlogCard.jsx
-│   │   │   │   │   ├── BlogDetail.jsx
-│   │   │   │   │   ├── CreateBlog.jsx
-│   │   │   │   │   ├── EditBlog.jsx
-│   │   │   │   │   └── BlogForm.jsx
-│   │   │   │   ├── comment/
-│   │   │   │   │   ├── CommentList.jsx
-│   │   │   │   │   ├── CommentForm.jsx
-│   │   │   │   │   └── CommentItem.jsx
-│   │   │   │   └── user/
-│   │   │   │       ├── UserProfile.jsx
-│   │   │   │       └── UserBlogs.jsx
-│   │   │   ├── pages/
-│   │   │   │   ├── Home.jsx
-│   │   │   │   ├── About.jsx
-│   │   │   │   ├── Contact.jsx
-│   │   │   │   ├── Dashboard.jsx
-│   │   │   │   └── NotFound.jsx
-│   │   │   ├── hooks/
-│   │   │   │   ├── useAuth.js
-│   │   │   │   ├── useBlogs.js
-│   │   │   │   └── useApi.js
-│   │   │   ├── services/
-│   │   │   │   ├── api.js
-│   │   │   │   ├── auth.service.js
-│   │   │   │   └── blog.service.js
-│   │   │   ├── context/
-│   │   │   │   ├── AuthContext.jsx
-│   │   │   │   └── ThemeContext.jsx
-│   │   │   ├── styles/
-│   │   │   │   ├── components/
-│   │   │   │   ├── pages/
-│   │   │   │   └── global.css
-│   │   │   ├── utils/
-│   │   │   │   ├── constants.js
-│   │   │   │   └── helpers.js
-│   │   │   ├── App.jsx
-│   │   │   ├── App.css
-│   │   │   ├── index.js
-│   │   │   └── index.css
-│   │   ├── .env.example
-│   │   ├── .gitignore
-│   │   ├── package.json
-│   │   ├── package-lock.json
-│   │   ├── vite.config.js
-│   │   └── README.md
-│   │
-│   └── TaskDescription.txt
+│   ├── public/
+│   │   └── vite.svg
+│   ├── src/
+│   │   ├── api/
+│   │   │   └── axios.js
+│   │   ├── assets/
+│   │   │   └── react.svg
+│   │   ├── components/
+│   │   │   ├── ConfirmModal.jsx
+│   │   │   └── NoteEditor.jsx
+│   │   ├── context/
+│   │   │   ├── AuthContext.jsx
+│   │   │   └── ThemeContext.jsx
+│   │   ├── pages/
+│   │   │   ├── AddNote.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── EditNote.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── NoteDetail.jsx
+│   │   │   └── Signup.jsx
+│   │   ├── App.css
+│   │   ├── App.jsx
+│   │   ├── index.css
+│   │   └── main.jsx
+│   ├── .gitignore
+│   ├── eslint.config.js
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── README.md
+│   ├── tailwind.config.js
+│   └── vite.config.js
 │
-├── shared/
-│   ├── types/
-│   │   ├── user.types.js
-│   │   ├── blog.types.js
-│   │   └── comment.types.js
-│   └── constants/
-│       └── index.js
-│
-├── docs/
-│   ├── API.md
-│   ├── SETUP.md
-│   └── CONTRIBUTING.md
-│
-├── .gitignore
-├── README.md
-└── package.json
+├── .git/
+├── folder-structure.md
+└── README.md
 ```
 
 ## Key Features Structure
 
 ### Backend Features
-- **Authentication**: JWT-based auth with refresh tokens
-- **Blog Management**: CRUD operations for blogs
-- **User Management**: Profile management and user roles
-- **Comment System**: Nested comments with moderation
-- **File Upload**: Image uploads for blog posts
-- **Search & Filter**: Full-text search and category filtering
-- **Pagination**: Efficient data loading
-- **Rate Limiting**: API protection
+- **Authentication**: JWT-based authentication with middleware protection
+- **Note Management**: Complete CRUD operations for notes
+- **User Management**: User registration, login, and profile management
+- **Validation**: Input validation middleware for requests
+- **Error Handling**: Centralized error handling middleware
+- **Email Utilities**: Email sending capabilities for notifications
 
 ### Frontend Features
-- **Responsive Design**: Mobile-first approach
-- **Dark/Light Mode**: Theme switching
-- **Rich Text Editor**: WYSIWYG editor for blog posts
-- **Image Gallery**: Multiple image uploads
-- **Real-time Updates**: Live comments and notifications
-- **SEO Optimization**: Meta tags and structured data
-- **Progressive Web App**: Offline capabilities
-- **Accessibility**: WCAG 2.1 compliance
+- **Responsive Design**: Mobile-first responsive layout
+- **Authentication**: User login and registration forms
+- **Note Management**: Create, read, update, and delete notes
+- **Rich Text Editor**: Note editing with rich text capabilities
+- **Theme Support**: Light/dark theme switching
+- **Modal Components**: Confirmation modals for actions
+- **API Integration**: Axios-based API communication
+- **Context Management**: React context for state management
 
 ### Database Collections
-- **users**: User information and authentication
-- **blogs**: Blog posts with metadata
-- **comments**: User comments on blogs
-- **categories**: Blog categories and tags
-- **sessions**: User sessions for auth
-- **uploads**: File upload tracking
+- **users**: User authentication and profile information
+- **notes**: Note content, metadata, and user associations
 
 ### Environment Variables
 ```
 # Backend (.env)
 PORT=5000
-MONGODB_URI=mongodb://localhost:27017/blogapp
+MONGO_URI=mongodb://localhost:27017/notesapp
 JWT_SECRET=your-secret-key
 JWT_REFRESH_SECRET=your-refresh-secret
 NODE_ENV=development
-CLOUDINARY_CLOUD_NAME=your-cloud-name
-CLOUDINARY_API_KEY=your-api-key
-CLOUDINARY_API_SECRET=your-api-secret
 
 # Frontend (.env)
 VITE_API_URL=http://localhost:5000/api
-VITE_APP_NAME=BlogApp
+VITE_APP_NAME=NotesApp
 ```
 
 ### Scripts
@@ -184,9 +112,7 @@ VITE_APP_NAME=BlogApp
 {
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "test": "jest",
-    "lint": "eslint src/"
+    "dev": "nodemon server.js"
   }
 }
 
@@ -195,8 +121,18 @@ VITE_APP_NAME=BlogApp
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "preview": "vite preview",
-    "test": "jest",
-    "lint": "eslint src/"
+    "preview": "vite preview"
   }
 }
+```
+
+## Project Overview
+
+This is a MERN stack Notes Management Application that allows users to:
+- Create and manage personal notes
+- Organize notes with rich text formatting
+- Securely authenticate with JWT tokens
+- Switch between light and dark themes
+- Access notes from any device with responsive design
+
+The application follows modern web development practices with separate backend (Node.js/Express) and frontend (React/Vite) architectures, connected through a RESTful API.
